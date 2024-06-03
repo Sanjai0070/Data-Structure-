@@ -1,0 +1,86 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define TABLE_SIZE 10
+
+typedef struct {
+    int key;
+    char name[50];
+} HashEntry;
+
+HashEntry* hashTable[TABLE_SIZE];
+
+int hashFunction(int key) {
+    return key % TABLE_SIZE;
+}
+
+void insert(int key, char* name) {
+    int index = hashFunction(key);
+    int startIndex = index;
+    
+    do {
+        if (hashTable[index] == NULL || hashTable[index]->key == -1) {
+            hashTable[index] = (HashEntry*)malloc(sizeof(HashEntry));
+            hashTable[index]->key = key;
+            strcpy(hashTable[index]->name, name);
+            return;
+        }
+        
+        index = (index + 1) % TABLE_SIZE;
+    } while (index != startIndex);
+    
+    printf("Hash table is full. Cannot insert key %d.\n", key);
+}
+
+void delete(int key) {
+    int index = hashFunction(key);
+    int startIndex = index;
+    
+    do {
+        if (hashTable[index] != NULL && hashTable[index]->key == key) {
+            hashTable[index]->key = -1;
+            return;
+        }
+        
+        index = (index + 1) % TABLE_SIZE;
+    } while (index != startIndex && hashTable[index] != NULL);
+    
+    printf("Key %d not found in the hash table.\n", key);
+}
+
+void search(int key) {
+    int index = hashFunction(key);
+    int startIndex = index;
+    
+    do {
+        if (hashTable[index] != NULL && hashTable[index]->key == key) {
+            printf("Key %d found in the hash table. Name: %s\n", key, hashTable[index]->name);
+            return;
+        }
+        
+        index = (index + 1) % TABLE_SIZE;
+    } while (index != startIndex && hashTable[index] != NULL);
+    
+    printf("Key %d not found in the hash table.\n", key);
+}
+
+int main() {
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        hashTable[i] = NULL;
+    }
+    
+    insert(10, "aryan");
+    insert(20, "arun");
+    insert(30, "sanjai");
+    insert(40, "surya");
+    
+    search(20);
+    search(30);
+    search(50);
+    
+    delete(30);
+    search(30);
+    
+    return 0;
+}
