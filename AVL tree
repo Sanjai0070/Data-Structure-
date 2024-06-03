@@ -1,0 +1,201 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+    int height;
+} Node;
+
+int height(Node* node) {
+    if (node == NULL) {
+        return 0;
+    }
+    return node->height;
+}
+
+int max(int a, int b) {
+    return (a > b) ? a : b;
+}
+
+Node* newNode(int data) {
+    Node* node = (Node*)malloc(sizeof(Node));
+    node->data = data;
+    node->left = node->right = NULL;
+    node->height = 1;
+    return node;
+}
+
+Node* leftRotate(Node* z) {
+    Node* y = z->right;
+    Node* T2 = y->left;
+
+    y->left = z;
+    z->right = T2;
+
+    z->height = max(height(z->left), height(z->right)) + 1;
+    y->height = max(height(y->left), height(y->right)) + 1;
+
+    return y;
+}
+
+Node* rightRotate(Node* y) {
+    Node* x = y->left;
+    Node* T2 = x->right;
+
+    x->right = y;
+    y->left = T2;
+
+    y->height = max(height(y->left), height(y->right)) + 1;
+    x->height = max(height(x->left), height(x->right)) + 1;
+
+    return x;
+}
+
+Node* balance(Node* z) {
+    int balanceFactor = height(z->left) - height(z->right);
+
+    if (balanceFactor > 1) {
+        if (height(z->left->left) >= height(z->left->right)) {
+            return rightRotate(z);
+        } else {
+            z->left = leftRotate(z->left);
+            return rightRotate(z);
+        }
+    }
+
+    if (balanceFactor < -1) {
+        if (height(z->right->right) >= height(z->right->left)) {
+            return leftRotate(z);
+        } else {
+            z->right = rightRotate(z->right);
+            return leftRotate(z);
+        }
+    }
+
+    return z;
+}
+Node* insert(Node* node, int data) {
+    if (node == NULL) {
+        return newNode(data);
+    }
+
+    if (data < node->data) {
+        node->left = insert(node->left, data);
+    } else if (data > node->data) {
+        node->right = insert(node->right, data);
+    } else {
+        return node;
+    }
+
+    node->height = max(height(node->left), height(node->right)) + 1;
+
+    int balanceFactor = height(node->left) - height(node->right);
+
+    if (balanceFactor > 1 || balanceFactor < -1) {
+        return balance(node);
+    }
+
+    return node;
+}
+Node* minValueNode(Node* node) {
+    Node* current = node;
+
+    while (current && current->left != NULL) {
+        current = current->left;
+    }
+
+    return current;
+}
+Node* deleteNode(Node* root, int data) {
+    if (root == NULL) {
+        return root;
+    }
+
+    if (data < root->data) {
+        root->left = deleteNode(root->left, data);
+    } else if (data > root->data) {
+        root->right = deleteNode(root->right, data);
+    } else {
+        if (root->left == NULL) {
+            Node* temp = root->right;
+            free(root);
+            return temp;
+        } else if (root->right == NULL) {
+            Node* temp = root->left;
+            free(root);
+            return temp;
+        }
+
+        Node* temp = minValueNode(root->right);
+        root->data = temp->data;
+        root->right = deleteNode(root->right, temp->data);
+    }
+
+    if (root == NULL) {
+        return root;
+    }
+
+    root->height = max(height(root->left), height(root->right)) + 1;
+
+    int balanceFactor = height(root->left) - height(root->right);
+
+    if (balanceFactor > 1 || balanceFactor < -1) {
+        return balance(root);
+    }
+
+    return root;
+}
+
+Node* search(Node* root, int key) {
+    if (root == NULL || root->data == key) {
+        return root;
+    }
+
+    if (key < root->data) {
+        return search(root->left, key);
+    }
+
+    return search(root->right, key);
+}
+void printTree(Node* node, int level) {
+    if (node != NULL) {
+        printTree(node->right, level + 1);
+        for (int i = 0; i < level; i++) {
+            printf("  ");
+        }
+        printf("%d\n", node->data);
+        printTree(node->left, level + 1);
+    }
+}
+
+int main() {
+    Node* root = NULL;
+    root = insert(root, 10);
+    root = insert(root, 20);
+    root = insert(root, 30);
+    root = insert(root, 40);
+    root = insert(root, 50);
+
+  
+    printf("AVL Tree:\n");
+    printTree(root, 0);
+
+    
+    Node* result = search(root, 30);
+    if (result != NULL) {
+        printf("Key 30 found in the AVL tree.\n");
+    } else {
+        printf("Key 30 not found in the AVL tree.\n");
+    }
+
+   
+    root = deleteNode(root, 30);
+
+    
+    printf("AVL Tree after deletion:\n");
+    printTree(root, 0);
+
+    return 0;
+}
